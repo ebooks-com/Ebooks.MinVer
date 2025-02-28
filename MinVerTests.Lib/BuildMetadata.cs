@@ -1,7 +1,7 @@
-using System.Reflection;
 using MinVer.Lib;
 using MinVerTests.Infra;
 using MinVerTests.Lib.Infra;
+using System.Reflection;
 using Xunit;
 using static MinVerTests.Infra.Git;
 
@@ -19,7 +19,7 @@ public static class BuildMetadata
         await EnsureEmptyRepository(path);
 
         // act
-        var actualVersion = Versioner.GetVersion(path, "", MajorMinor.Default, buildMetadata, default, PreReleaseIdentifiers.Default, false, NullLogger.Instance);
+        var actualVersion = Versioner.GetVersion(path, "", MajorMinor.Default, buildMetadata, default, PreReleaseIdentifiers.Default, false, false, NullLogger.Instance);
 
         // assert
         Assert.Equal(expectedVersion, actualVersion.ToString());
@@ -66,9 +66,9 @@ public static class BuildMetadata
     [InlineData("1.2.3+a", "", "1.2.4-alpha.0.1")]
     [InlineData("1.2.3", "b", "1.2.4-alpha.0.1+b")]
     [InlineData("1.2.3+a", "b", "1.2.4-alpha.0.1+b")]
-    [InlineData("1.2.3-pre+a", "", "1.2.3-pre.1")]
-    [InlineData("1.2.3-pre", "b", "1.2.3-pre.1+b")]
-    [InlineData("1.2.3-pre+a", "b", "1.2.3-pre.1+b")]
+    [InlineData("1.2.3-pre+a", "", "1.2.4-pre.1")]
+    [InlineData("1.2.3-pre", "b", "1.2.4-pre.1+b")]
+    [InlineData("1.2.3-pre+a", "b", "1.2.4-pre.1+b")]
     public static async Task PreviousTag(string tag, string buildMetadata, string expectedVersion)
     {
         // arrange

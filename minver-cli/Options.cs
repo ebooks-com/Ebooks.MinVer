@@ -1,5 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using MinVer.Lib;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MinVer;
 
@@ -14,7 +14,9 @@ internal sealed class Options
         MajorMinor? minMajorMinor,
         string? tagPrefix,
         Verbosity? verbosity,
-        Lib.Version? versionOverride)
+        Lib.Version? versionOverride,
+        bool? ignorePreReleaseIdentifiers,
+        bool? includeBranchName)
     {
         this.AutoIncrement = autoIncrement;
         this.BuildMeta = buildMeta;
@@ -25,6 +27,8 @@ internal sealed class Options
         this.TagPrefix = tagPrefix;
         this.Verbosity = verbosity;
         this.VersionOverride = versionOverride;
+        this.IgnorePreReleaseIdentifiers = ignorePreReleaseIdentifiers;
+        this.IncludeBranchName = includeBranchName;
     }
 
 #if MINVER_CLI
@@ -38,6 +42,8 @@ internal sealed class Options
         MajorMinor? minMajorMinor = null;
         Verbosity? verbosity = null;
         Lib.Version? versionOverride = null;
+        bool? ignorePreReleaseIdentifiers = null;
+        bool? includeBranchName = null;
 
         var autoIncrementEnvVar = GetEnvVar("MinVerAutoIncrement");
         if (!string.IsNullOrEmpty(autoIncrementEnvVar))
@@ -100,7 +106,35 @@ internal sealed class Options
             return false;
         }
 
-        options = new Options(autoIncrement, buildMeta, defaultPreReleaseIdentifiers, defaultPreReleasePhase, ignoreHeight, minMajorMinor, tagPrefix, verbosity, versionOverride);
+        var ignorePreReleaseIdentifiersEnvVar = GetEnvVar("MinVerIgnorePreReleaseIdentifiers");
+        if (!string.IsNullOrEmpty(ignorePreReleaseIdentifiersEnvVar))
+        {
+            if (bool.TryParse(ignorePreReleaseIdentifiersEnvVar, out var value))
+            {
+                ignorePreReleaseIdentifiers = value;
+            }
+            else
+            {
+                Logger.ErrorInvalidEnvVar("MinVerIgnorePreReleaseIdentifiers", ignorePreReleaseIdentifiersEnvVar, "true, false (case insensitive)");
+                return false;
+            }
+        }
+
+        var includeBranchNameEnvVar = GetEnvVar("MinVerIncludeBranchName");
+        if (!string.IsNullOrEmpty(includeBranchNameEnvVar))
+        {
+            if (bool.TryParse(includeBranchNameEnvVar, out var value))
+            {
+                includeBranchName = value;
+            }
+            else
+            {
+                Logger.ErrorInvalidEnvVar("MinVerIncludeBranchName", includeBranchNameEnvVar, "true, false (case insensitive)");
+                return false;
+            }
+        }
+
+        options = new Options(autoIncrement, buildMeta, defaultPreReleaseIdentifiers, defaultPreReleasePhase, ignoreHeight, minMajorMinor, tagPrefix, verbosity, versionOverride, ignorePreReleaseIdentifiers, includeBranchName);
 
         return true;
     }
@@ -130,6 +164,8 @@ internal sealed class Options
 #if MINVER
         string? versionOverrideOption,
 #endif
+        bool? ignorePreReleaseIdentifiersOption,
+        bool? includeBranchNameOption,
         [NotNullWhen(returnValue: true)] out Options? options)
     {
         options = null;
@@ -178,7 +214,7 @@ internal sealed class Options
         }
 #endif
 
-        options = new Options(autoIncrement, buildMetaOption, defaultPreReleaseIdentifiers, defaultPreReleasePhaseOption, ignoreHeight, minMajorMinor, tagPrefixOption, verbosity, versionOverride);
+        options = new Options(autoIncrement, buildMetaOption, defaultPreReleaseIdentifiers, defaultPreReleasePhaseOption, ignoreHeight, minMajorMinor, tagPrefixOption, verbosity, versionOverride, ignorePreReleaseIdentifiersOption, includeBranchNameOption);
 
         return true;
     }
@@ -193,7 +229,9 @@ internal sealed class Options
         this.MinMajorMinor ?? other.MinMajorMinor,
         this.TagPrefix ?? other.TagPrefix,
         this.Verbosity ?? other.Verbosity,
-        this.VersionOverride ?? other.VersionOverride);
+        this.VersionOverride ?? other.VersionOverride,
+        this.IgnorePreReleaseIdentifiers ?? other.IgnorePreReleaseIdentifiers,
+        this.IncludeBranchName ?? other.IncludeBranchName);
 #endif
 
     public VersionPart? AutoIncrement { get; }
@@ -213,4 +251,8 @@ internal sealed class Options
     public Verbosity? Verbosity { get; }
 
     public Lib.Version? VersionOverride { get; }
+
+    public bool? IgnorePreReleaseIdentifiers { get; set; }
+
+    public bool? IncludeBranchName { get; }
 }
