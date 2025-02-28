@@ -35,7 +35,7 @@ public static class BranchName
 
         // assert
         var versionString = version.ToString();
-        Assert.Equal("2.0.0-feature_foo", versionString);  // Note the / is replaced with -
+        Assert.Equal("2.0.0-feature-foo", versionString);
     }
 
     [Fact]
@@ -50,6 +50,6 @@ public static class BranchName
 
         // assert
         var versionString = version.ToString();
-        Assert.Equal("1.2.3-bugfix_123.alpha.0.42", versionString);  // Height is added at the end
+        Assert.Equal("1.2.3-bugfix-123.alpha.0.42", versionString);  // Height is added at the end
     }
 }
