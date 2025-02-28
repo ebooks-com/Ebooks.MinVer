@@ -1,7 +1,9 @@
 name: release
 on:
+  workflow_dispatch:
   push:
-    tags: ["*.*.*"]
+    branches:
+      - main
 permissions: read-all
 env:
   DOTNET_NOLOGO: true
