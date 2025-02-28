@@ -18,8 +18,4 @@ jobs:
           MINVER_VERSION: ${{ vars.MINVER_VERSION }}
         run: ./build build
       - name: push
-        env:
-          SOURCE: ${{ secrets.NUGET_PUSH_SOURCE }}
-          API_KEY: ${{ secrets.NUGET_PUSH_API_KEY }}
-        if: env.SOURCE != '' || env.API_KEY != ''
-        run: dotnet nuget push ./**/*.nupkg --source ${{ env.SOURCE }} --api-key ${{ env.API_KEY }}
+        run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
