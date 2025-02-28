@@ -113,12 +113,12 @@ app.OnExecute(() =>
     try
     {
         version = Versioner.GetVersion(
-            workDir, 
-            options.TagPrefix ?? "", 
-            options.MinMajorMinor ?? MajorMinor.Default, 
-            options.BuildMeta ?? "", 
-            options.AutoIncrement ?? default, 
-            defaultPreReleaseIdentifiers, 
+            workDir,
+            options.TagPrefix ?? "",
+            options.MinMajorMinor ?? MajorMinor.Default,
+            options.BuildMeta ?? "",
+            options.AutoIncrement ?? default,
+            defaultPreReleaseIdentifiers,
             options.IgnoreHeight ?? false,
             options.IncludeBranchName ?? false,
             log);

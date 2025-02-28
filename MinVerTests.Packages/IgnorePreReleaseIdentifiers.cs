@@ -151,6 +151,6 @@ public static class IgnorePreReleaseIdentifiers
         Assert.Contains("MINVER1009", sdkStandardOutput, StringComparison.Ordinal);
 
         Assert.Equal(expected.Version, cliStandardOutput.Trim());
-        Assert.Contains("MinVerIgnorePreReleaseIdentifiers is not compatbile with MinVerDefaultPreReleaseIdentifiers.", cliStandardError, StringComparison.Ordinal);
+        Assert.Contains("MinVerIgnorePreReleaseIdentifiers is not compatible with MinVerDefaultPreReleaseIdentifiers.", cliStandardError, StringComparison.Ordinal);
     }
 }
