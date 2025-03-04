@@ -12,9 +12,9 @@
     <OutputType>Exe</OutputType>
     <PackageIcon>minver.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/ebooks-com/minver</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ebooks-com/Ebooks.MinVer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>https://github.com/ebooks-com/minver/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/ebooks-com/Ebooks.MinVer/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RollForward>major</RollForward>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
