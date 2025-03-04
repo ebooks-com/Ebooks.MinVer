@@ -37,6 +37,7 @@
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerIgnorePreReleaseIdentifiers=$(MinVerIgnorePreReleaseIdentifiers)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerIgnoreHeight=$(MinVerIgnoreHeight)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerIncludeBranchName=$(MinVerIncludeBranchName)" />
+    <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerIgnoreBranchNames=$(MinVerIgnoreBranchNames)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerMinimumMajorMinor=$(MinVerMinimumMajorMinor)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerTagPrefix=$(MinVerTagPrefix)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [input] MinVerVerbosity=$(MinVerVerbosity)" />
@@ -54,6 +55,7 @@
       <MinVerInputs Include="--ignore-pre-release-identifiers" Condition="'$(MinVerIgnorePreReleaseIdentifiers)' == 'true'" />
       <MinVerInputs Include="--ignore-height" Condition="'$(MinVerIgnoreHeight)' == 'true'" />
       <MinVerInputs Include="--include-branch-name" Condition="'$(MinVerIncludeBranchName)' == 'true'" />
+      <MinVerInputs Include="--ignore-branch-names &quot;$(MinVerIgnoreBranchNames)&quot;" />
       <MinVerInputs Include="--minimum-major-minor &quot;$(MinVerMinimumMajorMinor)&quot;" />
       <MinVerInputs Include="--tag-prefix &quot;$(MinVerTagPrefix)&quot;" />
       <MinVerInputs Include="--verbosity &quot;$(MinVerVerbosity)&quot;" />
@@ -96,6 +98,7 @@
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [output] FileVersion=$(FileVersion)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [output] InformationalVersion=$(InformationalVersion)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [output] PackageVersion=$(PackageVersion)" />
+    <Message Importance="$(MinVerDetailed)" Text="MinVer: [output] Version=$(Version)" />
     <Message Importance="$(MinVerDetailed)" Text="MinVer: [output] Version=$(Version)" />
   </Target>
 
