@@ -6,9 +6,9 @@ public static class Versioner
 {
     // Backwards compatible wrapper method
     public static Version GetVersion(string workDir, string tagPrefix, MajorMinor minMajorMinor, string buildMeta, VersionPart autoIncrement, IEnumerable<string> defaultPreReleaseIdentifiers, bool ignoreHeight, ILogger log)
-        => GetVersion(workDir, tagPrefix, minMajorMinor, buildMeta, autoIncrement, defaultPreReleaseIdentifiers, ignoreHeight, false, log);
+        => GetVersion(workDir, tagPrefix, minMajorMinor, buildMeta, autoIncrement, defaultPreReleaseIdentifiers, ignoreHeight, false, [], log);
 
-    public static Version GetVersion(string workDir, string tagPrefix, MajorMinor minMajorMinor, string buildMeta, VersionPart autoIncrement, IEnumerable<string> defaultPreReleaseIdentifiers, bool ignoreHeight, bool includeBranchName, ILogger log)
+    public static Version GetVersion(string workDir, string tagPrefix, MajorMinor minMajorMinor, string buildMeta, VersionPart autoIncrement, IEnumerable<string> defaultPreReleaseIdentifiers, bool ignoreHeight, bool includeBranchName, IEnumerable<string> branchNamesToIgnore, ILogger log)
     {
         log = log ?? throw new ArgumentNullException(nameof(log));
 
@@ -20,9 +20,17 @@ public static class Versioner
         version = version.WithHeight(ignoreHeight, height ?? 0, autoIncrement, defaultPreReleaseIdentifiersList);
 
         // Add branch name to pre-release identifiers if requested
-        if (includeBranchName && TryGetBranchName(workDir, log, out var branchName))
+        if (includeBranchName && TryGetBranchName(workDir, log, branchNamesToIgnore, out var branchName))
         {
-            version = AppendBranchName(version, branchName, log);
+            if (branchNamesToIgnore.Contains(branchName, StringComparer.InvariantCulture))
+            {
+                _ = log.IsInfoEnabled && log.Info($"Branch name '{branchName}' marked as ignored, omitting from version.");
+            }
+            else
+            {
+                _ = log.Debug($"Branch name appended '{branchName}'.");
+                version = AppendBranchName(version, branchName, log);
+            }
         }
 
         version = version.AddBuildMetadata(buildMeta);
@@ -45,26 +53,23 @@ public static class Versioner
         return calculatedVersion;
     }
 
-    internal static bool TryGetBranchName(string workDir, ILogger log, out string branchName)
+    internal static bool TryGetBranchName(string workDir, ILogger log, IEnumerable<string> branchNamesToIgnore, out string branchName)
     {
-        if (Git.TryGetCurrentBranch(workDir, out var parsedBranchName, log))
+        if (!Git.TryGetCurrentBranch(workDir, out var parsedBranchName, log))
         {
-            // Format branch name to be compatible with SemVer
-            branchName = parsedBranchName;
-            return true;
+            _ = log.IsInfoEnabled && log.Info("Could not determine current branch name.");
+            branchName = string.Empty;
+            return false;
         }
 
-        _ = log.IsInfoEnabled && log.Info("Could not determine current branch name.");
-        branchName = string.Empty;
-        return false;
+        branchName = parsedBranchName;
+        return true;
     }
 
     private static string FormatBranchNameForSemVer(string branchName) => branchName.Replace('/', '-');
 
     internal static Version AppendBranchName(Version version, string branchName, ILogger log)
     {
-        _ = log.IsDebugEnabled && log.Debug($"Adding branch name '{branchName}' to version.");
-
         var formattedBranchName = FormatBranchNameForSemVer(branchName);
         if (!string.Equals(branchName, formattedBranchName, StringComparison.Ordinal))
         {
@@ -76,6 +81,8 @@ public static class Versioner
         var heightString = version.Height.ToString(CultureInfo.InvariantCulture);
         if (!version.ReleaseLabels.Any() || (version.ReleaseLabels.Count() == 1 && version.ReleaseLabels.First().StartsWith(heightString, StringComparison.InvariantCulture)))
         {
+            _ = log.IsDebugEnabled && log.Debug($"Adding branch name '{branchName}' to version.");
+
             return new Version(
                 version.Major,
                 version.Minor,
@@ -86,6 +93,7 @@ public static class Versioner
         }
 
         // Otherwise, add the branch name to the pre-release identifiers
+        _ = log.IsDebugEnabled && log.Debug($"Adding default pre-release identififiers to to version.");
         var preReleaseIdentifiers = version.ReleaseLabels.ToList();
 
         // Remove height if it's the last part (it will be added back automatically)
@@ -96,6 +104,8 @@ public static class Versioner
 
         // Insert the branch name at the start
         preReleaseIdentifiers.Insert(0, branchName);
+
+        _ = log.IsDebugEnabled && log.Debug($"    preReleaseIdentifiers = \"{string.Join(";", preReleaseIdentifiers)}\"");
 
         return new Version(
             version.Major,
