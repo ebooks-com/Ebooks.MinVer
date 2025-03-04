@@ -20,4 +20,4 @@ jobs:
           MINVER_VERSION: ${{ vars.MINVER_VERSION }}
         run: ./build build
       - name: push
-        run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }} --source "${{ vars.NUGET_PACKAGE_REGISTRY_URL  }}"
+        run: dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key ${{ secrets.EBOOKSBOT_GITHUBPACKAGES_TOKEN }} --source "${{ vars.NUGET_PACKAGE_REGISTRY_URL  }}"
