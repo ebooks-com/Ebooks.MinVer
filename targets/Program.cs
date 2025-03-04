@@ -12,7 +12,7 @@ if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS")?.ToUpperInvariant() == 
 
 Target("format", () => RunAsync("dotnet", "format --verify-no-changes"));
 
-Target("build", () => RunAsync("dotnet", "build --configuration Release --nologo"));
+Target("build", () => RunAsync("dotnet", "build   --configuration Release --nologo"));
 
 Target(
     "test-lib",
