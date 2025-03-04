@@ -16,7 +16,8 @@ internal sealed class Options
         Verbosity? verbosity,
         Lib.Version? versionOverride,
         bool? ignorePreReleaseIdentifiers,
-        bool? includeBranchName)
+        bool? includeBranchName,
+        IEnumerable<string>? ignoreBranchNames)
     {
         this.AutoIncrement = autoIncrement;
         this.BuildMeta = buildMeta;
@@ -29,6 +30,7 @@ internal sealed class Options
         this.VersionOverride = versionOverride;
         this.IgnorePreReleaseIdentifiers = ignorePreReleaseIdentifiers;
         this.IncludeBranchName = includeBranchName;
+        this.IgnoreBranchNames = ignoreBranchNames;
     }
 
 #if MINVER_CLI
@@ -44,6 +46,7 @@ internal sealed class Options
         Lib.Version? versionOverride = null;
         bool? ignorePreReleaseIdentifiers = null;
         bool? includeBranchName = null;
+        IEnumerable<string>? ignoreBranchNames = null;
 
         var autoIncrementEnvVar = GetEnvVar("MinVerAutoIncrement");
         if (!string.IsNullOrEmpty(autoIncrementEnvVar))
@@ -134,7 +137,17 @@ internal sealed class Options
             }
         }
 
-        options = new Options(autoIncrement, buildMeta, defaultPreReleaseIdentifiers, defaultPreReleasePhase, ignoreHeight, minMajorMinor, tagPrefix, verbosity, versionOverride, ignorePreReleaseIdentifiers, includeBranchName);
+        var ignoreBranchNamesEnvVar = GetEnvVar("MinVerIgnoreBranchNames");
+        if (!string.IsNullOrEmpty(ignoreBranchNamesEnvVar))
+        {
+            ignoreBranchNames = ignoreBranchNamesEnvVar.Split(';');
+            foreach (var ignoreBranchName in ignoreBranchNames)
+            {
+                _ = Logger.Message($"Ignoring branch '{ignoreBranchName}'");
+            }
+        }
+
+        options = new Options(autoIncrement, buildMeta, defaultPreReleaseIdentifiers, defaultPreReleasePhase, ignoreHeight, minMajorMinor, tagPrefix, verbosity, versionOverride, ignorePreReleaseIdentifiers, includeBranchName, ignoreBranchNames);
 
         return true;
     }
@@ -166,6 +179,7 @@ internal sealed class Options
 #endif
         bool? ignorePreReleaseIdentifiersOption,
         bool? includeBranchNameOption,
+        string? ignoreBranchNamesOption,
         [NotNullWhen(returnValue: true)] out Options? options)
     {
         options = null;
@@ -175,6 +189,7 @@ internal sealed class Options
         MajorMinor? minMajorMinor = null;
         Verbosity? verbosity = null;
         Lib.Version? versionOverride = null;
+        IEnumerable<string>? ignoreBranchNames = null;
 
         if (!string.IsNullOrEmpty(autoIncrementOption))
         {
@@ -214,7 +229,12 @@ internal sealed class Options
         }
 #endif
 
-        options = new Options(autoIncrement, buildMetaOption, defaultPreReleaseIdentifiers, defaultPreReleasePhaseOption, ignoreHeight, minMajorMinor, tagPrefixOption, verbosity, versionOverride, ignorePreReleaseIdentifiersOption, includeBranchNameOption);
+        if (!string.IsNullOrEmpty(ignoreBranchNamesOption))
+        {
+            ignoreBranchNames = ignoreBranchNamesOption.Split(' ');
+        }
+
+        options = new Options(autoIncrement, buildMetaOption, defaultPreReleaseIdentifiers, defaultPreReleasePhaseOption, ignoreHeight, minMajorMinor, tagPrefixOption, verbosity, versionOverride, ignorePreReleaseIdentifiersOption, includeBranchNameOption, ignoreBranchNames);
 
         return true;
     }
@@ -231,7 +251,8 @@ internal sealed class Options
         this.Verbosity ?? other.Verbosity,
         this.VersionOverride ?? other.VersionOverride,
         this.IgnorePreReleaseIdentifiers ?? other.IgnorePreReleaseIdentifiers,
-        this.IncludeBranchName ?? other.IncludeBranchName);
+        this.IncludeBranchName ?? other.IncludeBranchName,
+        this.IgnoreBranchNames ?? other.IgnoreBranchNames);
 #endif
 
     public VersionPart? AutoIncrement { get; }
@@ -255,4 +276,6 @@ internal sealed class Options
     public bool? IgnorePreReleaseIdentifiers { get; set; }
 
     public bool? IncludeBranchName { get; }
+
+    public IEnumerable<string>? IgnoreBranchNames { get; }
 }

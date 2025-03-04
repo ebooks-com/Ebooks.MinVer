@@ -24,6 +24,8 @@ var tagPrefixOption = app.Option("-t|--tag-prefix <TAG_PREFIX>", "", CommandOpti
 var verbosityOption = app.Option("-v|--verbosity <VERBOSITY>", VerbosityMap.ValidValues, CommandOptionType.SingleValue);
 var ignorePreReleaseIdentifiersOption = app.Option<bool>("-o|--ignore-pre-release-identifiers", "Ignore pre-release identifiers", CommandOptionType.NoValue);
 var includeBranchNameOption = app.Option<bool>("-n|--include-branch-name", "Include the current branch name in the pre-release identifiers", CommandOptionType.NoValue);
+var ignoreBranchNamesOption = app.Option<string>("-g|--ignore-branch-names", "A semicolon separated list of branch names to omit from the version string. e.g. \"main;master\"", CommandOptionType.SingleValue);
+
 #if MINVER
 var versionOverrideOption = app.Option("-o|--version-override <VERSION>", "", CommandOptionType.SingleValue);
 #endif
@@ -52,6 +54,7 @@ app.OnExecute(() =>
 #endif
         ignorePreReleaseIdentifiersOption.HasValue() ? true : null,
         includeBranchNameOption.HasValue() ? true : null,
+        ignoreBranchNamesOption.Value(),
         out var options))
     {
         return 2;
@@ -121,6 +124,7 @@ app.OnExecute(() =>
             defaultPreReleaseIdentifiers,
             options.IgnoreHeight ?? false,
             options.IncludeBranchName ?? false,
+            options.IgnoreBranchNames ?? [],
             log);
     }
     catch (NoGitException ex)
