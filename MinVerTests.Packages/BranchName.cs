@@ -16,7 +16,7 @@ public static class BranchName
         await Git.Init(path);
 
         // Create a branch
-        await Git.BranchAsync(path, "feature/billing");
+        await Git.CreateBranchAsync(path, "feature/billing");
         await Git.Commit(path);
 
         // Creating a tag to have a known version
@@ -45,7 +45,7 @@ public static class BranchName
         await Git.Init(path);
 
         // Create a branch
-        await Git.BranchAsync(path, "develop");
+        await Git.CreateBranchAsync(path, "develop");
         await Git.Commit(path);
 
         // Creating a tag to have a known version

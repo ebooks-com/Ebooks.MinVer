@@ -17,9 +17,17 @@ public static class Git
         return Init(path);
     }
 
-    public static async Task Init(string path)
+    public static async Task Init(string path, string? branchName = null, bool bare = false)
     {
-        _ = await CommandEx.ReadLoggedAsync("git", "init --initial-branch=main", path).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(branchName))
+        {
+            branchName = "main";
+        }
+
+        _ = bare
+            ? await CommandEx.ReadLoggedAsync("git", "init --bare", path).ConfigureAwait(false)
+            : await CommandEx.ReadLoggedAsync("git", $"init --initial-branch={branchName}", path).ConfigureAwait(false);
+
         _ = await CommandEx.ReadLoggedAsync("git", "config user.email johndoe@tempuri.org", path).ConfigureAwait(false);
         _ = await CommandEx.ReadLoggedAsync("git", "config user.name John Doe", path).ConfigureAwait(false);
         _ = await CommandEx.ReadLoggedAsync("git", "config commit.gpgsign false", path).ConfigureAwait(false);
@@ -43,6 +51,27 @@ public static class Git
     public static Task Checkout(string path, string sha) =>
         CommandEx.ReadLoggedAsync("git", $"checkout {sha}", path);
 
-    public static Task BranchAsync(string path, string name) =>
+    public static Task CreateBranchAsync(string path, string name) =>
         CommandEx.ReadLoggedAsync("git", $"checkout -b {name}", path);
+
+    public static Task AddRemoteAsync(string path, string remotePath, string name) =>
+        CommandEx.ReadLoggedAsync("git", $"remote add {name} {remotePath}", path);
+
+    public static Task PushAsync(string path, string remoteName, string branchName) =>
+        CommandEx.ReadLoggedAsync("git", $"push -u \"{remoteName}\" {branchName}", path);
+
+    public static Task SwitchBranchAsync(string path, string name) =>
+        CommandEx.ReadLoggedAsync("git", $"switch {name}", path);
+
+    public static Task MergeAsync(string path, string name) =>
+        CommandEx.ReadLoggedAsync("git", $"merge {name}", path);
+
+    public static Task CloneAsync(string path, string remoteRepository) =>
+        CommandEx.ReadLoggedAsync("git", $"clone {remoteRepository} .", path);
+
+    public static Task Fetch(string path, string remoteName) =>
+        CommandEx.ReadLoggedAsync("git", $"fetch {remoteName}", path);
+
+    public static Task AddAsync(string path, string pattern) =>
+        CommandEx.ReadLoggedAsync("git", $"add {pattern}", path);
 }

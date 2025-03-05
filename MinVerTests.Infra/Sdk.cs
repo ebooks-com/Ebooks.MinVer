@@ -46,9 +46,12 @@ public static class Sdk
         }
     }
 
-    public static Task CreateProject(string path, string configuration = Configuration.Current, bool multiTarget = false, bool enableSourceLink = false)
+    public static Task CreateProject(string path, string configuration = Configuration.Current, bool multiTarget = false, bool enableSourceLink = false, bool ensureEmptyDirectory = true)
     {
-        FileSystem.EnsureEmptyDirectory(path);
+        if (ensureEmptyDirectory)
+        {
+            FileSystem.EnsureEmptyDirectory(path);
+        }
 
         CreateGlobalJsonIfRequired(path);
 

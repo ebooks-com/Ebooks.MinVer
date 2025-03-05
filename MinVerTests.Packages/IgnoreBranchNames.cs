@@ -22,7 +22,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - run with both includeBranchName and ignoreBranchNames
         var envVars = new[]
@@ -56,7 +56,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - run with both includeBranchName and ignoreBranchNames (multiple branches)
         var envVars = new[]
@@ -90,7 +90,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - run with includeBranchName and different branch name in ignoreBranchNames
         var envVars = new[]
@@ -124,7 +124,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - run with includeBranchName and empty ignoreBranchNames
         var envVars = new[]
@@ -157,7 +157,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - set env var to ignore different branch, but command line to ignore current
         var envVars = new[]
@@ -191,7 +191,7 @@ public class IgnoreBranchNames
 
         // Create a feature branch and switch to it
         var branchName = "feature-xyz";
-        await Git.BranchAsync(path, branchName);
+        await Git.CreateBranchAsync(path, branchName);
 
         // Act - set includeBranchName to false, this should take precedence
         var envVars = new[]

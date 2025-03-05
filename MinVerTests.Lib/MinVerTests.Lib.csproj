@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- https://github.com/dotnet/roslyn-analyzers/issues/7192 -->
-    <NoWarn>$(NoWarn);CA1515</NoWarn>
+    <NoWarn>$(NoWarn);CA1515;CA1707</NoWarn>
     <RollForward>major</RollForward>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>

@@ -116,7 +116,7 @@ public static class Versioner
             version.Metadata);
     }
 
-    private static (Version Version, int? Height, bool IsFromTag) GetVersion(string workDir, string tagPrefix, List<string> defaultPreReleaseIdentifiers, ILogger log)
+    internal static (Version Version, int? Height, bool IsFromTag) GetVersion(string workDir, string tagPrefix, List<string> defaultPreReleaseIdentifiers, ILogger log)
     {
         if (!Git.IsWorkingDirectory(workDir, log))
         {
@@ -140,7 +140,7 @@ public static class Versioner
 
         var orderedCandidates = GetCandidates(head, tags, tagPrefix, defaultPreReleaseIdentifiers, log)
             .OrderBy(candidate => candidate.Version)
-            .ThenByDescending(candidate => candidate.Index).ToList();
+            .ThenByDescending(candidate => candidate.Height).ToList();
 
         var tagWidth = log.IsDebugEnabled ? orderedCandidates.Max(candidate => candidate.Tag.Length) : 0;
         var versionWidth = log.IsDebugEnabled ? orderedCandidates.Max(candidate => candidate.Version.ToString().Length) : 0;
@@ -188,7 +188,7 @@ public static class Versioner
         var itemsToCheck = new Stack<(Commit Commit, int Height, Commit? Child)>();
         itemsToCheck.Push((head, 0, null));
 
-        var checkedShas = new HashSet<string>();
+        var checkedShas = new Dictionary<string, List<Candidate>>();
         var candidates = new List<Candidate>();
 
         while (itemsToCheck.TryPop(out var item))
@@ -196,11 +196,18 @@ public static class Versioner
             _ = item.Child != null && log.IsTraceEnabled && log.Trace($"Checking parents of commit {item.Child}...");
             _ = log.IsTraceEnabled && log.Trace($"Checking commit {item.Commit} (height {item.Height})...");
 
-            if (!checkedShas.Add(item.Commit.Sha))
+            if (checkedShas.TryGetValue(item.Commit.Sha, out var t))
             {
+                foreach (var existing in t)
+                {
+                    existing.Height = Math.Max(existing.Height, item.Height);
+                }
+
                 _ = log.IsTraceEnabled && log.Trace($"Commit {item.Commit} already checked. Abandoning path.");
                 continue;
             }
+
+            checkedShas.Add(item.Commit.Sha, []);
 
             var commitTagsAndVersions = tagsAndVersions.Where(tagAndVersion => tagAndVersion.Sha == item.Commit.Sha).ToList();
 
@@ -211,6 +218,7 @@ public static class Versioner
                     var candidate = new Candidate(item.Commit, item.Height, name, version, candidates.Count);
                     _ = log.IsTraceEnabled && log.Trace($"Found version tag {candidate}.");
                     candidates.Add(candidate);
+                    checkedShas[candidate.Commit.Sha].Add(candidate);
                 }
 
                 continue;
@@ -220,7 +228,10 @@ public static class Versioner
 
             if (item.Commit.Parents.Count == 0)
             {
-                candidates.Add(new Candidate(item.Commit, item.Height, "", new Version(defaultPreReleaseIdentifiers), candidates.Count));
+                var candidate = new Candidate(item.Commit, item.Height, "", new Version(defaultPreReleaseIdentifiers), candidates.Count);
+                candidates.Add(candidate);
+                checkedShas[candidate.Commit.Sha].Add(candidate);
+
                 _ = log.IsTraceEnabled && log.Trace($"Found root commit {candidates.Last()}.");
                 continue;
             }
@@ -246,15 +257,15 @@ public static class Versioner
 
     private sealed class Candidate(Commit commit, int height, string tag, Version version, int index)
     {
-        public Commit Commit { get; } = commit;
+        public Commit Commit { get; set; } = commit;
 
-        public int Height { get; } = height;
+        public int Height { get; set; } = height;
 
-        public string Tag { get; } = tag;
+        public string Tag { get; set; } = tag;
 
-        public Version Version { get; } = version;
+        public Version Version { get; set; } = version;
 
-        public int Index { get; } = index;
+        public int Index { get; set; } = index;
 
         public override string ToString() => this.ToString(0, 0, 0);
 
