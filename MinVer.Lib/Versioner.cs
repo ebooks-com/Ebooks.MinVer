@@ -20,7 +20,7 @@ public static class Versioner
         version = version.WithHeight(ignoreHeight, height ?? 0, autoIncrement, defaultPreReleaseIdentifiersList);
 
         // Add branch name to pre-release identifiers if requested
-        if (includeBranchName && TryGetBranchName(workDir, log, branchNamesToIgnore, out var branchName))
+        if (includeBranchName && TryGetBranchName(workDir, log, out var branchName))
         {
             if (branchNamesToIgnore.Contains(branchName, StringComparer.InvariantCulture))
             {
@@ -28,7 +28,7 @@ public static class Versioner
             }
             else
             {
-                _ = log.Debug($"Branch name appended '{branchName}'.");
+                _ = log.IsDebugEnabled && log.Debug($"Branch name appended '{branchName}'.");
                 version = AppendBranchName(version, branchName, log);
             }
         }
@@ -53,7 +53,7 @@ public static class Versioner
         return calculatedVersion;
     }
 
-    internal static bool TryGetBranchName(string workDir, ILogger log, IEnumerable<string> branchNamesToIgnore, out string branchName)
+    internal static bool TryGetBranchName(string workDir, ILogger log, out string branchName)
     {
         if (!Git.TryGetCurrentBranch(workDir, out var parsedBranchName, log))
         {
@@ -150,7 +150,7 @@ public static class Versioner
         {
             foreach (var candidate in orderedCandidates.Take(orderedCandidates.Count - 1))
             {
-                _ = log.Debug($"Ignoring {candidate.ToString(tagWidth, versionWidth, heightWidth)}.");
+                _ = log.IsDebugEnabled && log.Debug($"Ignoring {candidate.ToString(tagWidth, versionWidth, heightWidth)}.");
             }
         }
 
@@ -181,13 +181,15 @@ public static class Versioner
         tagsAndVersions =
         [
             .. tagsAndVersions
-                .OrderBy(tagAndVersion => tagAndVersion.Version)
-                .ThenBy(tagsAndVersion => tagsAndVersion.Name),
-        ];
+            .OrderBy(tagAndVersion => tagAndVersion.Version)
+            .ThenBy(tagsAndVersion => tagsAndVersion.Name),
+    ];
 
         var itemsToCheck = new Stack<(Commit Commit, int Height, Commit? Child)>();
         itemsToCheck.Push((head, 0, null));
 
+        // Track the maximum height seen for each commit
+        var commitMaxHeights = new Dictionary<string, int>();
         var checkedShas = new Dictionary<string, List<Candidate>>();
         var candidates = new List<Candidate>();
 
@@ -196,29 +198,51 @@ public static class Versioner
             _ = item.Child != null && log.IsTraceEnabled && log.Trace($"Checking parents of commit {item.Child}...");
             _ = log.IsTraceEnabled && log.Trace($"Checking commit {item.Commit} (height {item.Height})...");
 
-            if (checkedShas.TryGetValue(item.Commit.Sha, out var t))
+            // Update the maximum height for this commit
+            if (commitMaxHeights.TryGetValue(item.Commit.Sha, out var existingMaxHeight))
             {
-                foreach (var existing in t)
+                // _ = log.IsDebugEnabled && log.Debug($"Commit {item.Commit.Sha[..8]} already seen with height {existingMaxHeight}, current path has height {item.Height}");
+
+                if (item.Height <= existingMaxHeight)
                 {
-                    existing.Height = Math.Max(existing.Height, item.Height);
+                    _ = log.IsTraceEnabled && log.Trace($"Commit {item.Commit} already checked with higher or equal height ({existingMaxHeight}). Abandoning path.");
+                    continue;
                 }
 
-                _ = log.IsTraceEnabled && log.Trace($"Commit {item.Commit} already checked. Abandoning path.");
-                continue;
-            }
+                // We found a longer path to this commit - update existing candidates
+                _ = log.IsDebugEnabled && log.Debug($"Found longer path to {item.Commit}: updating from height {existingMaxHeight} to {item.Height}");
+                commitMaxHeights[item.Commit.Sha] = item.Height;
 
-            checkedShas.Add(item.Commit.Sha, []);
+                if (checkedShas.TryGetValue(item.Commit.Sha, out var existingCandidates))
+                {
+                    foreach (var existing in existingCandidates)
+                    {
+                        var oldHeight = existing.Height;
+                        existing.Height = item.Height;
+                        _ = log.IsDebugEnabled && log.Debug($"Updated height for {existing.Tag} at {item.Commit} from {oldHeight} to {existing.Height}");
+                    }
+                }
+            }
+            else
+            {
+                commitMaxHeights[item.Commit.Sha] = item.Height;
+                checkedShas.Add(item.Commit.Sha, []);
+            }
 
             var commitTagsAndVersions = tagsAndVersions.Where(tagAndVersion => tagAndVersion.Sha == item.Commit.Sha).ToList();
 
             if (commitTagsAndVersions.Count != 0)
             {
-                foreach (var (name, _, version) in commitTagsAndVersions)
+                // If we already have candidates for this commit, don't create new ones
+                if (checkedShas[item.Commit.Sha].Count == 0)
                 {
-                    var candidate = new Candidate(item.Commit, item.Height, name, version, candidates.Count);
-                    _ = log.IsTraceEnabled && log.Trace($"Found version tag {candidate}.");
-                    candidates.Add(candidate);
-                    checkedShas[candidate.Commit.Sha].Add(candidate);
+                    foreach (var (name, _, version) in commitTagsAndVersions)
+                    {
+                        var candidate = new Candidate(item.Commit, item.Height, name, version, candidates.Count);
+                        _ = log.IsTraceEnabled && log.Trace($"Found version tag {candidate}.");
+                        candidates.Add(candidate);
+                        checkedShas[candidate.Commit.Sha].Add(candidate);
+                    }
                 }
 
                 continue;
@@ -228,11 +252,15 @@ public static class Versioner
 
             if (item.Commit.Parents.Count == 0)
             {
-                var candidate = new Candidate(item.Commit, item.Height, "", new Version(defaultPreReleaseIdentifiers), candidates.Count);
-                candidates.Add(candidate);
-                checkedShas[candidate.Commit.Sha].Add(candidate);
+                // If we already have candidates for this commit, don't create new ones
+                if (checkedShas[item.Commit.Sha].Count == 0)
+                {
+                    var candidate = new Candidate(item.Commit, item.Height, "", new Version(defaultPreReleaseIdentifiers), candidates.Count);
+                    candidates.Add(candidate);
+                    checkedShas[candidate.Commit.Sha].Add(candidate);
 
-                _ = log.IsTraceEnabled && log.Trace($"Found root commit {candidates.Last()}.");
+                    _ = log.IsTraceEnabled && log.Trace($"Found root commit {candidates.Last()}.");
+                }
                 continue;
             }
 

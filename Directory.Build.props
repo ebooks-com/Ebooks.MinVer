@@ -11,12 +11,16 @@
     <!-- workaround for https://github.com/dotnet/roslyn/issues/41640 -->
     <NoWarn>EnableGenerateDocumentationFile</NoWarn>
     <Nullable>enable</Nullable>
-    <!-- MinVer doesn't use MinVer for versioning because
-the environment variables for the build and for the package tests
-would interfere with each other. -->
+    <!-- MinVer doesn't use MinVer for versioning because the environment variables for the build and for the package tests would interfere with each other. -->
     <Version>0.0.0</Version>
     <Version Condition="'$(MINVER_VERSION)' != ''">$(MINVER_VERSION)</Version>
     <Version Condition="'$(CI_NUMBER)' != ''">$(Version)-ci.$(CI_NUMBER)</Version>
+    <!--
+      Ignore the following warnings:
+        CA1707: Remove the underscores from member names
+        CA1016: Mark assemblies with assembly version
+    -->
+    <NoWarn>$(NoWarn);CA1707;CA1016</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(CI)' != ''">

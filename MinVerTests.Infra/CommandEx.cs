@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using SimpleExec;
+using System.Collections.Concurrent;
 
 namespace MinVerTests.Infra;
 

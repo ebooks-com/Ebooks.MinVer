@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MinVerTests.Infra;
 
 public static class Git
@@ -8,8 +10,8 @@ public static class Git
         await Commit(path).ConfigureAwait(false);
     }
 
-    public static Task Commit(string path) =>
-        CommandEx.ReadLoggedAsync("git", "commit -m '.' --allow-empty", path);
+    public static Task Commit(string path, string? message = null) =>
+        CommandEx.ReadLoggedAsync("git", $"commit -m '{message ?? DateTimeOffset.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture)}' --allow-empty", path);
 
     public static Task EnsureEmptyRepository(string path)
     {
