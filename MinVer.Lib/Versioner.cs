@@ -93,7 +93,7 @@ public static class Versioner
         }
 
         // Otherwise, add the branch name to the pre-release identifiers
-        _ = log.IsDebugEnabled && log.Debug($"Adding default pre-release identififiers to to version.");
+        _ = log.IsDebugEnabled && log.Debug($"Adding default pre-release identifiers to to version.");
         var preReleaseIdentifiers = version.ReleaseLabels.ToList();
 
         // Remove height if it's the last part (it will be added back automatically)
