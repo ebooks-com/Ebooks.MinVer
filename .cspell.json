@@ -22,6 +22,7 @@
     "codeql",
     "devcontainers",
     "diag",
+    "gitdir",
     "globbing",
     "gpgsign",
     "markdownlint",
@@ -29,6 +30,7 @@
     "MINVERBUILDMETADATA",
     "MINVERVERSIONOVERRIDE",
     "MyGet",
+    "myproject",
     "Nerdbank",
     "netstandard",
     "NOLOGO",
@@ -41,7 +43,8 @@
     "refs",
     "shas",
     "SHFMT",
+    "Subfolders",
     "Versioner",
-    "xunit"
+    "xunit",
   ]
 }
