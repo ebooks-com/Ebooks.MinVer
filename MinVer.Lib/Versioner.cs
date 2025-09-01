@@ -118,7 +118,7 @@ public static class Versioner
 
     internal static (Version Version, int? Height, bool IsFromTag) GetVersion(string workDir, string tagPrefix, List<string> defaultPreReleaseIdentifiers, ILogger log)
     {
-        if (!Git.IsWorkingDirectory(workDir, log))
+        if (!Git.IsGitTracked(workDir, log))
         {
             var version = new Version(defaultPreReleaseIdentifiers);
 
